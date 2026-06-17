@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Buddy</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        input, button, select, textarea { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        ul { list-style-type: none; padding: 0; }
+        li { background: #e9ecef; margin: 15px 0; padding: 15px; border-radius: 8px; border-left: 5px solid #007bff; }
+        .post-header { font-weight: bold; font-size: 1.2em; color: #333; }
+        .post-matkul { font-size: 0.85em; color: #666; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Selamat Datang di Study Buddy! 🚀</h2>
+    <p>Ruang diskusi dan berbagi materi kuliah antar mahasiswa.</p>
+
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 300px;">
+            <h3>1. Daftar Akun Baru</h3>
+            <form id="formUser">
+                <input type="text" id="nama" placeholder="Nama Lengkap" required>
+                <input type="text" id="kampus" placeholder="Asal Kampus" required>
+                <button type="submit">Daftar Mahasiswa</button>
+            </form>
+        </div>
+
+        <div style="flex: 1; min-width: 300px;">
+            <h3>2. Bagikan Materi Kuliah</h3>
+            <form id="formPost">
+                <select id="postUser" required>
+                    <option value="">Pilih Mahasiswa...</option>
+                </select>
+                <input type="text" id="judul" placeholder="Judul Materi (Misal: Catatan Bab 1)" required>
+                <input type="text" id="mataKuliah" placeholder="Mata Kuliah (Misal: Algoritma)" required>
+                <textarea id="deskripsi" placeholder="Isi deskripsi / penjelasan materi..." rows="3" required></textarea>
+                <button type="submit" style="background-color: #28a745;">Posting Materi</button>
+            </form>
+        </div>
+    </div>
+
+    <hr style="margin: 30px 0;">
+
+    <h3>Timeline Materi Kuliah 📚</h3>
+    <ul id="listPost">
+        </ul>
+</div>
+
+<script>
+    // --- FUNGSI LOAD DATA ---
+    async function loadUsers() {
+        const response = await fetch('/api/users');
+        const users = await response.json();
+        const userSelect = document.getElementById('postUser');
+        userSelect.innerHTML = '<option value="">Pilih Mahasiswa...</option>';
+        users.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.id;
+            option.textContent = `${user.nama} - ${user.kampus}`;
+            userSelect.appendChild(option);
+        });
+    }
+
+    async function loadPosts() {
+        const response = await fetch('/api/posts');
+        const posts = await response.json();
+        const list = document.getElementById('listPost');
+        list.innerHTML = '';
+        posts.forEach(post => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="post-header">${post.judul}</div>
+                <div class="post-matkul">📘 Matkul: ${post.mataKuliah} | 👤 Oleh: ${post.user ? post.user.nama : 'Anonim'}</div>
+                <p>${post.deskripsi}</p>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    // --- FORM HANDLERS ---
+    document.getElementById('formUser').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nama: document.getElementById('nama').value, kampus: document.getElementById('kampus').value })
+        });
+        document.getElementById('nama').value = '';
+        document.getElementById('kampus').value = '';
+        loadUsers();
+    });
+
+    document.getElementById('formPost').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const userId = document.getElementById('postUser').value;
+        if (!userId) { alert("Pilih mahasiswa dulu!"); return; }
+
+        const newPost = {
+            judul: document.getElementById('judul').value,
+            mataKuliah: document.getElementById('mataKuliah').value,
+            deskripsi: document.getElementById('deskripsi').value,
+            user: { id: parseInt(userId) }
+        };
+
+        const response = await fetch('/api/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newPost)
+        });
+
+        if (response.ok) {
+            document.getElementById('judul').value = '';
+            document.getElementById('mataKuliah').value = '';
+            document.getElementById('deskripsi').value = '';
+            loadPosts(); 
+        } else {
+            alert("Gagal posting materi! Cek terminal Java.");
+        }
+    });
+
+    // Jalankan awal
+    loadUsers();
+    loadPosts();
+</script>
+
+</body>
+</html>
