@@ -690,7 +690,7 @@
         if (globalPollInterval) { clearInterval(globalPollInterval); globalPollInterval = null; }
     }
 
-    // Mengecek jumlah pesan belum dibaca & menampilkan/menyembunyikan badge di menu "Pesan"
+    // Mengecek jumlah pesan belum dibaca dan menampilkan/menyembunyikan badge di menu "Pesan"
     async function perbaruiBadgePesan() {
         if (!currentUser) return;
         const response = await fetch(`/api/messages/unread-count/${currentUser.id}`);
