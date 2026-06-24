@@ -5,130 +5,707 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Buddy</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        input, button, select, textarea { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #0056b3; }
-        ul { list-style-type: none; padding: 0; }
-        li { background: #e9ecef; margin: 15px 0; padding: 15px; border-radius: 8px; border-left: 5px solid #007bff; }
-        .post-header { font-weight: bold; font-size: 1.2em; color: #333; }
-        .post-matkul { font-size: 0.85em; color: #666; margin-bottom: 10px; }
+        /* --- RESET & TIPOGRAFI (TWITTER DARK MODE) --- */
+        :root {
+            color-scheme: dark;
+            --bg: #15202b;
+            --bg-elevated: #192734;
+            --bg-input: #253341;
+            --bg-hover: #1c2733;
+            --border: #38444d;
+            --text-primary: #e7e9ea;
+            --text-secondary: #8b98a5;
+            --accent: #1d9bf0;
+            --accent-hover: #1a8cd8;
+            --green: #00ba7c;
+            --green-hover: #00a36c;
+            --red: #f4212e;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background-color: var(--bg); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: var(--text-primary); }
+
+        /* Scrollbar ala Twitter dark */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        /* --- HALAMAN LOGIN & DAFTAR --- */
+        .auth-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: radial-gradient(circle at top, #1d3a52, #0b1219 70%); padding: 20px; }
+        .auth-card { background: var(--bg-elevated); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 8px 30px rgba(0,0,0,0.55); border: 1px solid var(--border); text-align: center; }
+        .auth-card h1 { color: var(--accent); font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; }
+        .auth-card p { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 25px; }
+        .auth-toggle { margin-top: 20px; font-size: 0.9rem; color: var(--text-secondary); }
+        .auth-toggle span { color: var(--accent); cursor: pointer; font-weight: bold; }
+        .auth-toggle span:hover { text-decoration: underline; }
+
+        /* --- LAYOUT UTAMA APLIKASI --- */
+        .app-wrapper { display: none; max-width: 1100px; margin: 40px auto; gap: 30px; padding: 0 15px; }
+
+        /* --- SIDEBAR KIRI --- */
+        .sidebar { width: 260px; flex-shrink: 0; position: sticky; top: 40px; height: fit-content; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 10px; }
+        .logo-app { font-size: 1.6rem; font-weight: 800; color: var(--accent); white-space: nowrap; display: flex; align-items: center; gap: 10px; }
+        .btn-toggle-sidebar { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); transition: 0.2s; padding: 5px; border-radius: 8px; }
+        .btn-toggle-sidebar:hover { background: var(--bg-hover); color: var(--accent); }
+
+        .sidebar-content { display: block; overflow: hidden; }
+
+        .user-logged-info { background: var(--bg-elevated); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; white-space: nowrap; transition: 0.3s; }
+        .user-avatar { font-size: 1.8rem; background: var(--bg-input); border-radius: 50%; padding: 5px; min-width: 45px; text-align: center; }
+        .user-details strong { color: var(--text-primary); font-size: 1rem; }
+        .user-details span { color: var(--text-secondary); font-size: 0.8rem; }
+
+        .nav-menu { list-style: none; }
+        .nav-item { padding: 12px 15px; margin-bottom: 8px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 1.05rem; color: var(--text-primary); transition: 0.2s; display: flex; align-items: center; gap: 15px; white-space: nowrap; }
+        .nav-icon { font-size: 1.3rem; }
+        .nav-item:hover { background: var(--bg-hover); color: var(--accent); }
+        .nav-item.active { background: rgba(29,155,240,0.15); color: var(--accent); }
+        .btn-logout { color: var(--red); margin-top: 20px; }
+        .btn-logout:hover { background: rgba(244,33,46,0.1); color: var(--red); }
+
+        /* --- DESKTOP MINIMIZE --- */
+        @media (min-width: 769px) {
+            .sidebar.collapsed { width: 80px; }
+            .sidebar.collapsed .logo-text,
+            .sidebar.collapsed .user-details,
+            .sidebar.collapsed .nav-text { display: none; }
+            .sidebar.collapsed .sidebar-header { justify-content: center; }
+            .sidebar.collapsed .user-logged-info { padding: 10px; justify-content: center; }
+            .sidebar.collapsed .nav-item { padding: 15px 0; justify-content: center; }
+        }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+            .app-wrapper { flex-direction: column; margin-top: 0; gap: 15px; padding: 0; }
+            .sidebar { width: 100% !important; top: 0; background: var(--bg); padding: 15px 20px; border-radius: 0; border-bottom: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+            .sidebar-header { margin-bottom: 0; padding: 0; }
+            .sidebar-content { display: flex; flex-direction: column; transition: max-height 0.3s ease, margin-top 0.3s ease, opacity 0.3s ease; max-height: 600px; margin-top: 20px; opacity: 1; }
+            .sidebar.collapsed .sidebar-content { max-height: 0; margin-top: 0; opacity: 0; pointer-events: none; }
+            .main-content { padding: 0 15px 20px 15px; }
+        }
+
+        /* --- KONTEN TENGAH --- */
+        .main-content { flex: 1; transition: 0.3s; min-width: 0; }
+        .card { background: var(--bg-elevated); padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.35); border: 1px solid var(--border); }
+        .card h3 { font-size: 1.1rem; color: var(--text-primary); margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+
+        /* --- INPUT & TOMBOL --- */
+        input[type="text"], textarea { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 10px; background-color: var(--bg-input); color: var(--text-primary); font-family: inherit; font-size: 0.95rem; transition: 0.3s; }
+        input[type="text"]::placeholder, textarea::placeholder { color: var(--text-secondary); }
+        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--accent); background-color: var(--bg-hover); box-shadow: 0 0 0 3px rgba(29,155,240,0.25); }
+        button { background-color: var(--accent); color: #ffffff; border: none; padding: 12px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.95rem; width: 100%; }
+        button:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        .btn-green { background-color: var(--green); }
+        .btn-green:hover { background-color: var(--green-hover); }
+
+        /* =========================================
+           KUSTOMISASI TOMBOL "CHOOSE FILE"
+           ========================================= */
+        input[type="file"] {
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-secondary); /* Warna teks "No file chosen" */
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        /* Mengubah kotak tombol jadulnya */
+        input[type="file"]::file-selector-button {
+            background-color: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 15px;
+            font-family: inherit;
+        }
+
+        /* Efek saat tombol di-hover */
+        input[type="file"]::file-selector-button:hover {
+            background-color: var(--accent);
+            color: #ffffff;
+        }
+
+        /* --- TIMELINE --- */
+        .timeline-title { color: var(--text-secondary); font-size: 1.2rem; margin: 20px 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        #listPost { list-style: none; }
+        .post-card { background: var(--bg-elevated); padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.35); border: 1px solid var(--border); }
+        .post-header-area { display: flex; justify-content: space-between; align-items: flex-start; }
+        .post-title { font-weight: 800; font-size: 1.3rem; margin-bottom: 5px; color: var(--text-primary); }
+        .post-matkul { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px; }
+        .post-desc { font-size: 1.05rem; line-height: 1.6; margin-bottom: 20px; color: var(--text-primary); }
+
+        .btn-save { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); width: auto; padding: 0; }
+        .btn-save.saved { color: var(--green); }
+        .file-attachment { display: inline-flex; align-items: center; background: var(--bg-input); border: 1px solid var(--border); padding: 8px 15px; border-radius: 20px; text-decoration: none; color: var(--accent); font-weight: bold; font-size: 0.85rem; margin-bottom: 20px; }
+
+        /* --- DISKUSI --- */
+        .comment-section { border-top: 1px solid var(--border); padding-top: 20px; }
+        .comment-item { background: var(--bg-input); padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; color: var(--text-primary); }
+        .comment-actions span { cursor: pointer; margin-left: 10px; font-size: 1rem; }
+        .btn-like.liked { opacity: 1; }
+
+        .form-komentar { display: flex; gap: 10px; margin-top: 15px; }
+        .form-komentar input { flex: 1; margin-bottom: 0; border-radius: 25px; padding: 10px 15px; }
+        .form-komentar button { width: auto; border-radius: 25px; padding: 10px 20px; }
+
+        /* --- PENCARIAN MATA KULIAH --- */
+        .search-bar { margin-bottom: 20px; }
+        .search-bar input { margin-bottom: 0; border-radius: 25px; }
+
+        /* --- TOMBOL CHAT DI POST --- */
+        .btn-chat { display: inline-block; background: none; border: 1px solid var(--accent); color: var(--accent); width: auto; padding: 3px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: bold; margin-left: 10px; vertical-align: middle; }
+        .btn-chat:hover { background: var(--accent); color: #ffffff; transform: none; }
+
+        /* --- MODAL CHAT PRIBADI --- */
+        .chat-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .chat-overlay.active { display: flex; }
+        .chat-box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; height: 600px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.6); }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .chat-header strong { color: var(--text-primary); font-size: 1.05rem; font-weight: 700; }
+        .btn-close-chat { background: none; border: none; color: var(--text-secondary); font-size: 1.4rem; line-height: 1; cursor: pointer; width: auto; padding: 0; }
+        .btn-close-chat:hover { color: var(--accent); background: none; transform: none; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px 20px; display: flex; flex-direction: column; gap: 10px; }
+        .chat-bubble { max-width: 75%; padding: 10px 14px; border-radius: 16px; font-size: 0.92rem; line-height: 1.4; word-wrap: break-word; }
+        .chat-bubble.sent { background: var(--accent); color: #ffffff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-bubble.received { background: var(--bg-input); color: var(--text-primary); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .chat-time { font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px; display: block; }
+        .chat-bubble.sent .chat-time { color: rgba(255,255,255,0.75); text-align: right; }
+        .chat-empty { text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-top: 20px; }
+        .chat-input-area { display: flex; gap: 10px; padding: 15px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
+        .chat-input-area input { flex: 1; margin-bottom: 0; border-radius: 25px; }
+        .chat-input-area button { width: auto; border-radius: 25px; padding: 10px 20px; }
+
+        /* --- BADGE NOTIFIKASI PESAN BELUM DIBACA --- */
+        .nav-badge { background: var(--accent); color: #ffffff; font-size: 0.7rem; font-weight: 800; padding: 2px 7px; border-radius: 999px; margin-left: auto; min-width: 20px; text-align: center; line-height: 1.3; }
+        @media (min-width: 769px) {
+            .sidebar.collapsed .nav-item { position: relative; }
+            .sidebar.collapsed .nav-badge { position: absolute; top: 8px; right: 16px; margin-left: 0; font-size: 0.65rem; padding: 1px 5px; min-width: 16px; }
+        }
+
+        /* --- INBOX / DAFTAR PERCAKAPAN --- */
+        .inbox-item { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; cursor: pointer; transition: 0.2s; }
+        .inbox-item:hover { background: var(--bg-hover); }
+        .inbox-item.unread { border-color: var(--accent); }
+        .inbox-info strong { color: var(--text-primary); font-size: 1rem; }
+        .inbox-preview { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .inbox-meta { text-align: right; flex-shrink: 0; }
+        .inbox-time { color: var(--text-secondary); font-size: 0.75rem; white-space: nowrap; display: block; margin-bottom: 6px; }
+        .inbox-empty { text-align: center; color: var(--text-secondary); margin-top: 30px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Selamat Datang di Study Buddy! 🚀</h2>
-    <p>Ruang diskusi dan berbagi materi kuliah antar mahasiswa.</p>
-
-    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 300px;">
-            <h3>1. Daftar Akun Baru</h3>
-            <form id="formUser">
-                <input type="text" id="nama" placeholder="Nama Lengkap" required>
-                <input type="text" id="kampus" placeholder="Asal Kampus" required>
-                <button type="submit">Daftar Mahasiswa</button>
-            </form>
-        </div>
-
-        <div style="flex: 1; min-width: 300px;">
-            <h3>2. Bagikan Materi Kuliah</h3>
-            <form id="formPost">
-                <select id="postUser" required>
-                    <option value="">Pilih Mahasiswa...</option>
-                </select>
-                <input type="text" id="judul" placeholder="Judul Materi (Misal: Catatan Bab 1)" required>
-                <input type="text" id="mataKuliah" placeholder="Mata Kuliah (Misal: Algoritma)" required>
-                <textarea id="deskripsi" placeholder="Isi deskripsi / penjelasan materi..." rows="3" required></textarea>
-                <button type="submit" style="background-color: #28a745;">Posting Materi</button>
-            </form>
-        </div>
+<div id="authLayer" class="auth-wrapper">
+    <div id="loginBox" class="auth-card">
+        <h1>Study Buddy</h1>
+        <p>Masuk untuk melihat materi kuliah</p>
+        <form id="formLogin">
+            <input type="text" id="loginNama" placeholder="Masukkan Nama Lengkap Kamu" required>
+            <button type="submit">Masuk</button>
+        </form>
+        <div class="auth-toggle">Belum punya akun? <span onclick="toggleAuthView(false)">Daftar sekarang</span></div>
     </div>
 
-    <hr style="margin: 30px 0;">
+    <div id="registerBox" class="auth-card" style="display: none;">
+        <h1>Study Buddy</h1>
+        <p>Buat akun baru kamu sekarang</p>
+        <form id="formRegister">
+            <input type="text" id="regNama" placeholder="Nama Lengkap" required>
+            <input type="text" id="regKampus" placeholder="Asal Kampus" required>
+            <button type="submit" class="btn-green">Daftar Akun</button>
+        </form>
+        <div class="auth-toggle">Sudah punya akun? <span onclick="toggleAuthView(true)">Masuk</span></div>
+    </div>
+</div>
 
-    <h3>Timeline Materi Kuliah 📚</h3>
-    <ul id="listPost">
-        </ul>
+<div id="appLayer" class="app-wrapper">
+
+    <aside class="sidebar" id="appSidebar">
+        <div class="sidebar-header">
+            <div class="logo-app">
+                <span class="logo-text">Study Buddy</span> 🚀
+            </div>
+            <button class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Sembunyikan/Tampilkan Menu">☰</button>
+        </div>
+
+        <div class="sidebar-content">
+            <div class="user-logged-info">
+                <div class="user-avatar">👤</div>
+                <div class="user-details">
+                    <strong id="loggedName">Nama User</strong><br>
+                    <span id="loggedCampus">Nama Kampus</span>
+                </div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item active" id="menu-home" onclick="gantiMenu('home')">
+                    <span class="nav-icon">🏠</span> <span class="nav-text">Beranda Materi</span>
+                </li>
+                <li class="nav-item" id="menu-saved" onclick="gantiMenu('saved')">
+                    <span class="nav-icon">🔖</span> <span class="nav-text">Materi Disimpan</span>
+                </li>
+                <li class="nav-item" id="menu-liked" onclick="gantiMenu('liked')">
+                    <span class="nav-icon">❤️</span> <span class="nav-text">Komentar Disukai</span>
+                </li>
+                <li class="nav-item" id="menu-pesan" onclick="gantiMenu('pesan')">
+                    <span class="nav-icon">💬</span> <span class="nav-text">Pesan</span>
+                    <span id="badgePesan" class="nav-badge" style="display: none;">0</span>
+                </li>
+                <li class="nav-item btn-logout" onclick="logout()">
+                    <span class="nav-icon">🚪</span> <span class="nav-text">Keluar Akun</span>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div id="formArea">
+            <div class="card">
+                <h3>📝 Bagikan Materi Kuliah Baru</h3>
+                <form id="formPost">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="judul" placeholder="Judul Catatan/Materi" required style="flex: 2;">
+                        <input type="text" id="mataKuliah" placeholder="Mata Kuliah" required style="flex: 1;">
+                    </div>
+                    <textarea id="deskripsi" placeholder="Tulis deskripsi atau isi penjelasan singkat materi..." rows="2" required></textarea>
+
+                    <input type="file" id="fileMateri" accept=".pdf,.doc,.docx,.jpg,.png,.zip">
+
+                    <button type="submit" class="btn-green">Posting Materi</button>
+                </form>
+            </div>
+        </div>
+
+        <h3 class="timeline-title" id="judulTimeline">📚 Timeline Terbaru</h3>
+
+        <div class="search-bar" id="searchArea">
+            <input type="text" id="searchMatkul" placeholder="🔍 Cari berdasarkan mata kuliah..." oninput="cariMataKuliah()">
+        </div>
+
+        <ul id="listPost"></ul>
+        <div id="inboxArea" style="display: none;"></div>
+    </main>
+</div>
+
+<!-- MODAL CHAT PRIBADI -->
+<div id="chatOverlay" class="chat-overlay">
+    <div class="chat-box">
+        <div class="chat-header">
+            <strong>💬 Chat dengan <span id="chatHeaderName"></span></strong>
+            <button class="btn-close-chat" onclick="tutupChat()" title="Tutup">✕</button>
+        </div>
+        <div id="chatMessages" class="chat-messages"></div>
+        <form id="formChat" class="chat-input-area">
+            <input type="text" id="isiPesanChat" placeholder="Tulis pesan..." required autocomplete="off">
+            <button type="submit">Kirim</button>
+        </form>
+    </div>
 </div>
 
 <script>
-    // --- FUNGSI LOAD DATA ---
-    async function loadUsers() {
+    let currentUser = null;
+    let menuAktif = 'home';
+
+    let savedPosts = JSON.parse(localStorage.getItem('savedPosts')) || [];
+    let likedComments = JSON.parse(localStorage.getItem('likedComments')) || [];
+
+    // --- STATE UNTUK PENCARIAN MATA KULIAH ---
+    let searchKeyword = '';
+
+    // --- STATE UNTUK CHAT PRIBADI ---
+    let chatTargetUserId = null;
+    let chatPollingInterval = null;
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        sidebar.classList.toggle('collapsed');
+    }
+
+    function initCheck() {
+        const session = localStorage.getItem('currentUser');
+        if (window.innerWidth <= 768) {
+            document.getElementById('appSidebar').classList.add('collapsed');
+        }
+
+        if (session) {
+            currentUser = JSON.parse(session);
+            document.getElementById('authLayer').style.display = 'none';
+            document.getElementById('appLayer').style.display = 'flex';
+            document.getElementById('loggedName').textContent = currentUser.nama;
+            document.getElementById('loggedCampus').textContent = currentUser.kampus;
+            loadPosts();
+            mulaiPollingGlobal();
+        } else {
+            document.getElementById('authLayer').style.display = 'flex';
+            document.getElementById('appLayer').style.display = 'none';
+        }
+    }
+
+    function toggleAuthView(showLogin) {
+        document.getElementById('loginBox').style.display = showLogin ? 'block' : 'none';
+        document.getElementById('registerBox').style.display = showLogin ? 'none' : 'block';
+    }
+
+    document.getElementById('formLogin').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const inputNama = document.getElementById('loginNama').value.trim();
         const response = await fetch('/api/users');
         const users = await response.json();
-        const userSelect = document.getElementById('postUser');
-        userSelect.innerHTML = '<option value="">Pilih Mahasiswa...</option>';
-        users.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.id;
-            option.textContent = `${user.nama} - ${user.kampus}`;
-            userSelect.appendChild(option);
+        const userKetemu = users.find(u => u.nama.toLowerCase() === inputNama.toLowerCase());
+
+        if (userKetemu) {
+            localStorage.setItem('currentUser', JSON.stringify(userKetemu));
+            document.getElementById('loginNama').value = '';
+            initCheck();
+        } else {
+            alert("Nama tidak ditemukan! Silakan daftar akun baru terlebih dahulu.");
+        }
+    });
+
+    document.getElementById('formRegister').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const newUser = {
+            nama: document.getElementById('regNama').value,
+            kampus: document.getElementById('regKampus').value
+        };
+        const response = await fetch('/api/users', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newUser)
         });
+
+        if (response.ok) {
+            const resUsers = await fetch('/api/users');
+            const users = await resUsers.json();
+            const userBaru = users.find(u => u.nama === newUser.nama);
+            localStorage.setItem('currentUser', JSON.stringify(userBaru));
+            document.getElementById('regNama').value = '';
+            document.getElementById('regKampus').value = '';
+            initCheck();
+        } else {
+            alert("Pendaftaran gagal!");
+        }
+    });
+
+    function logout() {
+        hentikanPollingGlobal();
+        localStorage.removeItem('currentUser');
+        initCheck();
+    }
+
+    document.getElementById('formPost').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append("userId", currentUser.id);
+        formData.append("judul", document.getElementById('judul').value);
+        formData.append("mataKuliah", document.getElementById('mataKuliah').value);
+        formData.append("deskripsi", document.getElementById('deskripsi').value);
+
+        const fileInput = document.getElementById('fileMateri');
+        if (fileInput.files.length > 0) formData.append("file", fileInput.files[0]);
+
+        const response = await fetch('/api/posts', { method: 'POST', body: formData });
+        if (response.ok) {
+            document.getElementById('judul').value = ''; document.getElementById('mataKuliah').value = ''; document.getElementById('deskripsi').value = ''; fileInput.value = ''; loadPosts();
+        }
+    });
+
+    async function kirimKomentar(event, postId) {
+        event.preventDefault();
+        const teks = document.getElementById(`isiKomentar-${postId}`).value;
+        await fetch('/api/comments', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isiKomentar: teks, user: { id: currentUser.id }, post: { id: postId } })
+        }).then(res => res.ok ? loadPosts() : alert("Gagal balaskan komentar!"));
     }
 
     async function loadPosts() {
         const response = await fetch('/api/posts');
-        const posts = await response.json();
+        let posts = await response.json();
+        posts.reverse();
+
         const list = document.getElementById('listPost');
         list.innerHTML = '';
-        posts.forEach(post => {
+
+        for (const post of posts) {
+            if (menuAktif === 'saved' && !savedPosts.includes(post.id)) continue;
+            if (searchKeyword && !post.mataKuliah.toLowerCase().includes(searchKeyword)) continue;
+            const commentRes = await fetch(`/api/comments/post/${post.id}`);
+            const comments = await commentRes.json();
+            if (menuAktif === 'liked') {
+                const adaYangDilike = comments.some(c => likedComments.includes(c.id));
+                if (!adaYangDilike) continue;
+            }
+
+            const isSaved = savedPosts.includes(post.id);
+            const saveIcon = isSaved ? '🔖' : '📑';
+            const saveClass = isSaved ? 'saved' : '';
+
+            let commentsHtml = '';
+            comments.forEach(c => {
+                const amanTeks = c.isiKomentar.replace(/'/g, "\\'");
+                const isLiked = likedComments.includes(c.id);
+                const likeIcon = isLiked ? '❤️' : '🤍';
+                const likeClass = isLiked ? 'liked' : '';
+
+                if (menuAktif === 'liked' && !isLiked) return;
+
+                const actionButtons = c.user.id === currentUser.id ?
+                    `<span onclick="editKomentar(${c.id}, '${amanTeks}')" title="Edit">✏️</span>
+                     <span onclick="hapusKomentar(${c.id})" title="Hapus">❌</span>` : '';
+
+                commentsHtml += `
+                    <div class="comment-item">
+                        <div><strong>${c.user.nama}:</strong> ${c.isiKomentar}</div>
+                        <div class="comment-actions">
+                            <span class="${likeClass}" onclick="toggleLike(${c.id})" title="Suka">${likeIcon}</span>
+                            ${actionButtons}
+                        </div>
+                    </div>`;
+            });
+
+            let fileLampiran = post.fileUrl ? `<a href="${post.fileUrl}" target="_blank" class="file-attachment">📎 Unduh File Materi</a>` : '';
+
+            // Tombol chat hanya muncul jika materi ini dibagikan oleh user LAIN (bukan diri sendiri)
+            let tombolChat = '';
+            if (post.user && post.user.id !== currentUser.id) {
+                const namaAman = post.user.nama.replace(/'/g, "\\'");
+                tombolChat = `<button class="btn-chat" onclick="bukaChat(${post.user.id}, '${namaAman}')">💬 Chat</button>`;
+            }
+
             const li = document.createElement('li');
+            li.className = 'post-card';
             li.innerHTML = `
-                <div class="post-header">${post.judul}</div>
-                <div class="post-matkul">📘 Matkul: ${post.mataKuliah} | 👤 Oleh: ${post.user ? post.user.nama : 'Anonim'}</div>
-                <p>${post.deskripsi}</p>
+                <div class="post-header-area">
+                    <div>
+                        <div class="post-title">${post.judul}</div>
+                        <div class="post-matkul">📘 ${post.mataKuliah} &nbsp;•&nbsp; 👤 ${post.user ? post.user.nama : 'Anonim'} ${tombolChat}</div>
+                    </div>
+                    <button class="btn-save ${saveClass}" onclick="toggleSave(${post.id})" title="Simpan Materi">${saveIcon}</button>
+                </div>
+                <p class="post-desc">${post.deskripsi}</p>
+                ${fileLampiran}
+
+                <div class="comment-section">
+                    <h4 style="font-size: 0.9rem; color: #8b98a5; margin-bottom: 10px;">Diskusi</h4>
+                    ${commentsHtml}
+                    ${menuAktif === 'home' ? `
+                    <form class="form-komentar" onsubmit="kirimKomentar(event, ${post.id})">
+                        <input type="text" id="isiKomentar-${post.id}" placeholder="Tulis balasan diskusi..." required>
+                        <button type="submit">Kirim</button>
+                    </form>` : ''}
+                </div>
             `;
             list.appendChild(li);
+        }
+        if (list.innerHTML === '') list.innerHTML = `<p style="text-align: center; color: #8b98a5; margin-top: 30px;">Belum ada materi di sini.</p>`;
+    }
+
+    function gantiMenu(menu) {
+        menuAktif = menu;
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`menu-${menu}`).classList.add('active');
+
+        const isPesan = menu === 'pesan';
+        document.getElementById('formArea').style.display = (menu === 'home') ? 'block' : 'none';
+        document.getElementById('searchArea').style.display = isPesan ? 'none' : 'block';
+        document.getElementById('listPost').style.display = isPesan ? 'none' : 'block';
+        document.getElementById('inboxArea').style.display = isPesan ? 'block' : 'none';
+
+        const judulEl = document.getElementById('judulTimeline');
+        if (menu === 'home') judulEl.innerHTML = '📚 Timeline Terbaru';
+        else if (menu === 'saved') judulEl.innerHTML = '🔖 Materi Yang Kamu Simpan';
+        else if (menu === 'liked') judulEl.innerHTML = '❤️ Komentar Yang Kamu Sukai';
+        else if (menu === 'pesan') judulEl.innerHTML = '💬 Pesan Masuk';
+
+        if (window.innerWidth <= 768) {
+            document.getElementById('appSidebar').classList.add('collapsed');
+        }
+
+        if (isPesan) {
+            muatInbox();
+        } else {
+            loadPosts();
+        }
+    }
+
+    function toggleSave(postId) {
+        if (savedPosts.includes(postId)) savedPosts = savedPosts.filter(id => id !== postId);
+        else savedPosts.push(postId);
+        localStorage.setItem('savedPosts', JSON.stringify(savedPosts));
+        loadPosts();
+    }
+
+    function toggleLike(commentId) {
+        if (likedComments.includes(commentId)) likedComments = likedComments.filter(id => id !== commentId);
+        else likedComments.push(commentId);
+        localStorage.setItem('likedComments', JSON.stringify(likedComments));
+        loadPosts();
+    }
+
+    async function hapusKomentar(commentId) {
+        if (confirm("Hapus komentar ini?")) { await fetch(`/api/comments/${commentId}`, { method: 'DELETE' }).then(res => res.ok ? loadPosts() : alert("Gagal!")); }
+    }
+
+    async function editKomentar(commentId, teksLama) {
+        const teksBaru = prompt("Edit komentarmu:", teksLama);
+        if (!teksBaru || teksBaru.trim() === "") return;
+        await fetch(`/api/comments/${commentId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isiKomentar: teksBaru }) }).then(res => res.ok ? loadPosts() : alert("Gagal!"));
+    }
+
+    // --- PENCARIAN MATA KULIAH ---
+    function cariMataKuliah() {
+        searchKeyword = document.getElementById('searchMatkul').value.trim().toLowerCase();
+        loadPosts();
+    }
+
+    // --- CHAT PRIBADI ---
+
+    // Membuka jendela chat dengan mahasiswa tertentu
+    function bukaChat(userId, userName) {
+        chatTargetUserId = userId;
+        document.getElementById('chatHeaderName').textContent = userName;
+        document.getElementById('chatOverlay').classList.add('active');
+
+        muatPesanChat();
+
+        if (chatPollingInterval) clearInterval(chatPollingInterval);
+        chatPollingInterval = setInterval(muatPesanChat, 3000); // refresh otomatis tiap 3 detik
+    }
+
+    // Menutup jendela chat & hentikan polling
+    function tutupChat() {
+        document.getElementById('chatOverlay').classList.remove('active');
+        if (chatPollingInterval) { clearInterval(chatPollingInterval); chatPollingInterval = null; }
+        chatTargetUserId = null;
+    }
+
+    // Mengambil & menampilkan riwayat pesan dengan lawan chat yang sedang aktif
+    async function muatPesanChat() {
+        if (!chatTargetUserId) return;
+
+        const response = await fetch(`/api/messages/conversation/${currentUser.id}/${chatTargetUserId}`);
+        const daftarPesan = await response.json();
+
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = '';
+
+        if (daftarPesan.length === 0) {
+            container.innerHTML = `<p class="chat-empty">Belum ada pesan. Mulai obrolan sekarang!</p>`;
+            return;
+        }
+
+        daftarPesan.forEach(pesan => {
+            const terkirimOlehSaya = pesan.pengirim.id === currentUser.id;
+            const waktu = new Date(pesan.waktuKirim).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${terkirimOlehSaya ? 'sent' : 'received'}`;
+            bubble.innerHTML = `${pesan.isiPesan}<span class="chat-time">${waktu}</span>`;
+            container.appendChild(bubble);
+        });
+
+        container.scrollTop = container.scrollHeight; // auto-scroll ke pesan terbaru
+        perbaruiBadgePesan(); // refresh badge karena membuka chat ini menandai pesan sebagai sudah dibaca
+    }
+
+    // Mengirim pesan baru ke lawan chat yang sedang aktif
+    document.getElementById('formChat').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const input = document.getElementById('isiPesanChat');
+        const teks = input.value.trim();
+        if (!teks || !chatTargetUserId) return;
+
+        await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                isiPesan: teks,
+                pengirim: { id: currentUser.id },
+                penerima: { id: chatTargetUserId }
+            })
+        });
+
+        input.value = '';
+        muatPesanChat();
+    });
+
+    // --- INBOX (DAFTAR PERCAKAPAN) ---
+
+    // Mengambil & menampilkan daftar semua percakapan milik user yang sedang login
+    async function muatInbox() {
+        const response = await fetch(`/api/messages/inbox/${currentUser.id}`);
+        const daftarKonversasi = await response.json();
+
+        const container = document.getElementById('inboxArea');
+        container.innerHTML = '';
+
+        if (daftarKonversasi.length === 0) {
+            container.innerHTML = `<p class="inbox-empty">Belum ada pesan masuk. Klik tombol 💬 Chat di materi yang dibagikan mahasiswa lain untuk mulai mengobrol!</p>`;
+            return;
+        }
+
+        daftarKonversasi.sort((a, b) => new Date(b.waktuTerakhir) - new Date(a.waktuTerakhir));
+
+        daftarKonversasi.forEach(percakapan => {
+            const waktu = new Date(percakapan.waktuTerakhir).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            const adaBelumDibaca = percakapan.belumDibaca > 0;
+            const badge = adaBelumDibaca ? `<span class="nav-badge">${percakapan.belumDibaca}</span>` : '';
+            const namaAman = percakapan.nama.replace(/'/g, "\\'");
+
+            const item = document.createElement('div');
+            item.className = `inbox-item ${adaBelumDibaca ? 'unread' : ''}`;
+            item.onclick = () => bukaChat(percakapan.userId, namaAman);
+            item.innerHTML = `
+                <div class="inbox-info">
+                    <strong>${percakapan.nama}</strong>
+                    <div class="inbox-preview">${percakapan.pesanTerakhir}</div>
+                </div>
+                <div class="inbox-meta">
+                    <span class="inbox-time">${waktu}</span>
+                    ${badge}
+                </div>
+            `;
+            container.appendChild(item);
         });
     }
 
-    // --- FORM HANDLERS ---
-    document.getElementById('formUser').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        await fetch('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nama: document.getElementById('nama').value, kampus: document.getElementById('kampus').value })
-        });
-        document.getElementById('nama').value = '';
-        document.getElementById('kampus').value = '';
-        loadUsers();
-    });
+    // --- BADGE NOTIFIKASI GLOBAL (POLLING TIAP 5 DETIK) ---
+    let globalPollInterval = null;
 
-    document.getElementById('formPost').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const userId = document.getElementById('postUser').value;
-        if (!userId) { alert("Pilih mahasiswa dulu!"); return; }
+    function mulaiPollingGlobal() {
+        if (globalPollInterval) clearInterval(globalPollInterval);
+        perbaruiBadgePesan(); // cek langsung sekali begitu user login
+        globalPollInterval = setInterval(() => {
+            perbaruiBadgePesan();
+            if (menuAktif === 'pesan') muatInbox(); // ikut refresh isi inbox kalau sedang dilihat
+        }, 5000);
+    }
 
-        const newPost = {
-            judul: document.getElementById('judul').value,
-            mataKuliah: document.getElementById('mataKuliah').value,
-            deskripsi: document.getElementById('deskripsi').value,
-            user: { id: parseInt(userId) }
-        };
+    function hentikanPollingGlobal() {
+        if (globalPollInterval) { clearInterval(globalPollInterval); globalPollInterval = null; }
+    }
 
-        const response = await fetch('/api/posts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newPost)
-        });
+    // Mengecek jumlah pesan belum dibaca & menampilkan/menyembunyikan badge di menu "Pesan"
+    async function perbaruiBadgePesan() {
+        if (!currentUser) return;
+        const response = await fetch(`/api/messages/unread-count/${currentUser.id}`);
+        const data = await response.json();
 
-        if (response.ok) {
-            document.getElementById('judul').value = '';
-            document.getElementById('mataKuliah').value = '';
-            document.getElementById('deskripsi').value = '';
-            loadPosts(); 
+        const badge = document.getElementById('badgePesan');
+        if (data.total > 0) {
+            badge.textContent = data.total;
+            badge.style.display = 'inline-block';
         } else {
-            alert("Gagal posting materi! Cek terminal Java.");
+            badge.style.display = 'none';
         }
-    });
+    }
 
-    // Jalankan awal
-    loadUsers();
-    loadPosts();
+    initCheck();
 </script>
-
 </body>
 </html>
