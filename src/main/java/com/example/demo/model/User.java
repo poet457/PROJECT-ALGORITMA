@@ -17,7 +17,7 @@ public class User {
     private String nama;
     private String email;
     private String password;
-    private String kampus;
+    private String prodi;
 
     // --- GETTER AND SETTER WAJIB ---
     
@@ -53,11 +53,11 @@ public class User {
         this.password = password; 
     }
 
-    public String getKampus() { 
-        return kampus; 
+    public String getProdi() { 
+        return prodi; 
     }
     
-    public void setKampus(String kampus) { 
-        this.kampus = kampus; 
+    public void setProdi(String prodi) { 
+        this.prodi = prodi; 
     }
 }

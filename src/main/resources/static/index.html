@@ -32,13 +32,32 @@
         ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
         /* --- HALAMAN LOGIN & DAFTAR --- */
-        .auth-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: radial-gradient(circle at top, #1d3a52, #0b1219 70%); padding: 20px; }
+        .auth-wrapper { display: flex; flex-direction: column; min-height: 100vh; background: radial-gradient(circle at top, #1d3a52, #0b1219 70%); padding: 24px; }
         .auth-card { background: var(--bg-elevated); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 8px 30px rgba(0,0,0,0.55); border: 1px solid var(--border); text-align: center; }
         .auth-card h1 { color: var(--accent); font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; }
         .auth-card p { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 25px; }
         .auth-toggle { margin-top: 20px; font-size: 0.9rem; color: var(--text-secondary); }
         .auth-toggle span { color: var(--accent); cursor: pointer; font-weight: bold; }
         .auth-toggle span:hover { text-decoration: underline; }
+
+        /* --- LANDING TOPBAR & HERO (HALAMAN AWAL SEBELUM LOGIN) --- */
+        .landing-topbar { display: flex; gap: 10px; }
+        .btn-landing { width: auto; padding: 9px 24px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; }
+        .btn-landing.outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
+        .btn-landing.outline:hover { background: var(--accent); color: #ffffff; transform: none; }
+        .btn-landing.filled { background: var(--accent); color: #ffffff; border: 2px solid var(--accent); }
+        .btn-landing.filled:hover { background: var(--accent-hover); border-color: var(--accent-hover); transform: none; }
+
+        .landing-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; }
+        .landing-logo { font-size: 1.4rem; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
+        .landing-slogan { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; color: var(--text-primary); margin-bottom: 15px; line-height: 1.2; max-width: 600px; }
+        .landing-subtitle { color: var(--text-secondary); font-size: 1.05rem; max-width: 480px; line-height: 1.5; }
+
+        /* --- MODAL LOGIN / DAFTAR --- */
+        .auth-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .auth-modal-overlay.active { display: flex; }
+        .btn-close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-secondary); font-size: 1.4rem; line-height: 1; cursor: pointer; width: auto; padding: 0; }
+        .btn-close-modal:hover { color: var(--accent); background: none; transform: none; }
 
         /* --- LAYOUT UTAMA APLIKASI --- */
         .app-wrapper { display: none; max-width: 1100px; margin: 40px auto; gap: 30px; padding: 0 15px; }
@@ -92,9 +111,9 @@
         .card h3 { font-size: 1.1rem; color: var(--text-primary); margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
 
         /* --- INPUT & TOMBOL --- */
-        input[type="text"], textarea { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 10px; background-color: var(--bg-input); color: var(--text-primary); font-family: inherit; font-size: 0.95rem; transition: 0.3s; }
-        input[type="text"]::placeholder, textarea::placeholder { color: var(--text-secondary); }
-        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--accent); background-color: var(--bg-hover); box-shadow: 0 0 0 3px rgba(29,155,240,0.25); }
+        input[type="text"], input[type="email"], input[type="password"], textarea { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 10px; background-color: var(--bg-input); color: var(--text-primary); font-family: inherit; font-size: 0.95rem; transition: 0.3s; }
+        input[type="text"]::placeholder, input[type="email"]::placeholder, input[type="password"]::placeholder, textarea::placeholder { color: var(--text-secondary); }
+        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, textarea:focus { outline: none; border-color: var(--accent); background-color: var(--bg-hover); box-shadow: 0 0 0 3px rgba(29,155,240,0.25); }
         button { background-color: var(--accent); color: #ffffff; border: none; padding: 12px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.95rem; width: 100%; }
         button:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
         .btn-green { background-color: var(--green); }
@@ -202,25 +221,45 @@
 <body>
 
 <div id="authLayer" class="auth-wrapper">
-    <div id="loginBox" class="auth-card">
-        <h1>Study Buddy</h1>
-        <p>Masuk untuk melihat materi kuliah</p>
-        <form id="formLogin">
-            <input type="text" id="loginNama" placeholder="Masukkan Nama Lengkap Kamu" required>
-            <button type="submit">Masuk</button>
-        </form>
-        <div class="auth-toggle">Belum punya akun? <span onclick="toggleAuthView(false)">Daftar sekarang</span></div>
+    <div class="landing-topbar">
+        <button class="btn-landing outline" onclick="bukaModalAuth('login')">Masuk</button>
+        <button class="btn-landing filled" onclick="bukaModalAuth('register')">Daftar</button>
     </div>
 
-    <div id="registerBox" class="auth-card" style="display: none;">
-        <h1>Study Buddy</h1>
-        <p>Buat akun baru kamu sekarang</p>
-        <form id="formRegister">
-            <input type="text" id="regNama" placeholder="Nama Lengkap" required>
-            <input type="text" id="regKampus" placeholder="Asal Kampus" required>
-            <button type="submit" class="btn-green">Daftar Akun</button>
-        </form>
-        <div class="auth-toggle">Sudah punya akun? <span onclick="toggleAuthView(true)">Masuk</span></div>
+    <div class="landing-hero">
+        <div class="landing-logo">Study Buddy 🚀</div>
+        <h1 class="landing-slogan">Temukan Partner Matkulmu!</h1>
+        <p class="landing-subtitle">Bagikan catatan kuliah, diskusi bareng, dan chat langsung dengan teman seangkatan — semua dalam satu tempat.</p>
+    </div>
+</div>
+
+<div id="authModalOverlay" class="auth-modal-overlay">
+    <div class="auth-card" style="position: relative;">
+        <button class="btn-close-modal" onclick="tutupModalAuth()" title="Tutup">✕</button>
+
+        <div id="loginBox">
+            <h1>Masuk</h1>
+            <p>Masuk untuk melihat materi kuliah</p>
+            <form id="formLogin">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit">Masuk</button>
+            </form>
+            <div class="auth-toggle">Belum punya akun? <span onclick="gantiFormAuth('register')">Daftar sekarang</span></div>
+        </div>
+
+        <div id="registerBox" style="display: none;">
+            <h1>Daftar Akun</h1>
+            <p>Buat akun baru kamu sekarang</p>
+            <form id="formRegister">
+                <input type="text" id="regNama" placeholder="Username" required>
+                <input type="text" id="regProdi" placeholder="Program Studi" required>
+                <input type="email" id="regEmail" placeholder="Email" required>
+                <input type="password" id="regPassword" placeholder="Password" required>
+                <button type="submit" class="btn-green">Daftar Akun</button>
+            </form>
+            <div class="auth-toggle">Sudah punya akun? <span onclick="gantiFormAuth('login')">Masuk</span></div>
+        </div>
     </div>
 </div>
 
@@ -239,7 +278,7 @@
                 <div class="user-avatar">👤</div>
                 <div class="user-details">
                     <strong id="loggedName">Nama User</strong><br>
-                    <span id="loggedCampus">Nama Kampus</span>
+                    <span id="loggedProdi">Program Studi</span>
                 </div>
             </div>
 
@@ -338,7 +377,7 @@
             document.getElementById('authLayer').style.display = 'none';
             document.getElementById('appLayer').style.display = 'flex';
             document.getElementById('loggedName').textContent = currentUser.nama;
-            document.getElementById('loggedCampus').textContent = currentUser.kampus;
+            document.getElementById('loggedProdi').textContent = currentUser.prodi;
             loadPosts();
             mulaiPollingGlobal();
         } else {
@@ -347,24 +386,44 @@
         }
     }
 
-    function toggleAuthView(showLogin) {
-        document.getElementById('loginBox').style.display = showLogin ? 'block' : 'none';
-        document.getElementById('registerBox').style.display = showLogin ? 'none' : 'block';
+    // Membuka modal login/daftar dari tombol di landing page
+    function bukaModalAuth(jenis) {
+        document.getElementById('authModalOverlay').classList.add('active');
+        gantiFormAuth(jenis);
+    }
+
+    // Menutup modal login/daftar
+    function tutupModalAuth() {
+        document.getElementById('authModalOverlay').classList.remove('active');
+    }
+
+    // Beralih antara form Masuk dan form Daftar di dalam modal yang sama
+    function gantiFormAuth(jenis) {
+        const tampilkanLogin = jenis === 'login';
+        document.getElementById('loginBox').style.display = tampilkanLogin ? 'block' : 'none';
+        document.getElementById('registerBox').style.display = tampilkanLogin ? 'none' : 'block';
     }
 
     document.getElementById('formLogin').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const inputNama = document.getElementById('loginNama').value.trim();
-        const response = await fetch('/api/users');
-        const users = await response.json();
-        const userKetemu = users.find(u => u.nama.toLowerCase() === inputNama.toLowerCase());
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
 
-        if (userKetemu) {
-            localStorage.setItem('currentUser', JSON.stringify(userKetemu));
-            document.getElementById('loginNama').value = '';
+        const response = await fetch('/api/users/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            const userLogin = await response.json();
+            localStorage.setItem('currentUser', JSON.stringify(userLogin));
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            tutupModalAuth();
             initCheck();
         } else {
-            alert("Nama tidak ditemukan! Silakan daftar akun baru terlebih dahulu.");
+            alert("Email atau password salah! Silakan coba lagi.");
         }
     });
 
@@ -372,22 +431,25 @@
         e.preventDefault();
         const newUser = {
             nama: document.getElementById('regNama').value,
-            kampus: document.getElementById('regKampus').value
+            prodi: document.getElementById('regProdi').value,
+            email: document.getElementById('regEmail').value,
+            password: document.getElementById('regPassword').value
         };
         const response = await fetch('/api/users', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newUser)
         });
 
         if (response.ok) {
-            const resUsers = await fetch('/api/users');
-            const users = await resUsers.json();
-            const userBaru = users.find(u => u.nama === newUser.nama);
+            const userBaru = await response.json();
             localStorage.setItem('currentUser', JSON.stringify(userBaru));
             document.getElementById('regNama').value = '';
-            document.getElementById('regKampus').value = '';
+            document.getElementById('regProdi').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
+            tutupModalAuth();
             initCheck();
         } else {
-            alert("Pendaftaran gagal!");
+            alert("Pendaftaran gagal! Email mungkin sudah terdaftar sebelumnya.");
         }
     });
 
@@ -690,7 +752,7 @@
         if (globalPollInterval) { clearInterval(globalPollInterval); globalPollInterval = null; }
     }
 
-    // Mengecek jumlah pesan belum dibaca dan menampilkan/menyembunyikan badge di menu "Pesan"
+    // Mengecek jumlah pesan belum dibaca & menampilkan/menyembunyikan badge di menu "Pesan"
     async function perbaruiBadgePesan() {
         if (!currentUser) return;
         const response = await fetch(`/api/messages/unread-count/${currentUser.id}`);
